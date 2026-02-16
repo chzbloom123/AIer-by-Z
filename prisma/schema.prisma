@@ -1,0 +1,72 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Admin user for the site
+model Admin {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String   // Hashed password
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Personas - fictional author identities
+model Persona {
+  id              String   @id @default(cuid())
+  name            String
+  bio             String
+  role            String   // "reporter" | "commentator" | "contributor"
+  profileImageUrl String?
+  moreInfoText    String?
+  externalLinks   String?  // JSON string for { youtube: url, social: url, etc. }
+  displayOrder    Int      @default(0)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  articles        Article[]
+
+  @@map("personas")
+}
+
+// Articles - content pieces
+model Article {
+  id              String   @id @default(cuid())
+  title           String
+  body            String
+  excerpt         String
+  featuredImageUrl String?
+  personaId       String
+  personaName     String   // Denormalized for display performance
+  category        String?
+  tags            String?  // JSON array of strings
+  style           String?  // "satire" | "commentary" | "analysis"
+  isPublic        Boolean  @default(true)
+  publishedAt     DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  persona         Persona  @relation(fields: [personaId], references: [id])
+
+  @@map("articles")
+}
+
+// Site settings - single document
+model Settings {
+  id        String   @id @default("site")
+  siteName  String   @default("The Artificial Intelligencer")
+  tagline   String?
+  isPublic  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("settings")
+}
